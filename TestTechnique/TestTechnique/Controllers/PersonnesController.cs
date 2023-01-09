@@ -66,10 +66,6 @@ namespace TestTechnique.Controllers
 
                 context.SaveChanges();
             }
-            else
-            {
-                var tt = context.Personnes.ToList();
-            }
         }
 
         [HttpPost]
@@ -81,6 +77,7 @@ namespace TestTechnique.Controllers
                 if (personne.IsValide())
                 {
                     context.Personnes.Add(personne);
+                    context.SaveChanges();
                 }
                 else
                 {
@@ -96,24 +93,28 @@ namespace TestTechnique.Controllers
             }
         }
 
-        [HttpPut("{personneID:int}")]
-        public async Task UpdatePersonne(int personneID, Emploi emploi)
+        [HttpPut("UpdatePersonne/{personneID}/{emploiID}")]
+        public async Task UpdatePersonne(int personneID, int emploiID)
         {
             try
             {
-                if (!(emploi.DateDebut == null || emploi.DateDebut == new DateTime()))
+                var emploi = context.Emplois.Where(p => p.EmploiId == emploiID).FirstOrDefault();
+                if (emploi != null)
                 {
-                    var personneBase = context.Personnes.Where(p => p.PersonneID == personneID).FirstOrDefault();
-                    if (personneBase != null)
+                    if (!(emploi.DateDebut == null || emploi.DateDebut == new DateTime()))
                     {
-                        personneBase.Emplois.Add(emploi);
-                    }
+                        var personneBase = context.Personnes.Where(p => p.PersonneID == personneID).FirstOrDefault();
+                        if (personneBase != null)
+                        {
+                            personneBase.Emplois.Add(emploi);
+                        }
 
-                    context.SaveChanges();
-                }
-                else
-                {
-                    throw new Exception("La date de début de l'emploi n'est pas correcte");
+                        context.SaveChanges();
+                    }
+                    else
+                    {
+                        throw new Exception("La date de début de l'emploi n'est pas correcte");
+                    }
                 }
             }
             catch(Exception ex)
@@ -134,7 +135,7 @@ namespace TestTechnique.Controllers
                     personne.Age = personne.GetAge();
                     //Emplois actuels si l'emploi commence avant maintenant et si la date de fin n'est pas précisée
                     //ou si elle est postérieur à maintenant
-                    //personne.Emplois = personne.Emplois.Where(p => p.DateDebut < DateTime.Now && (p.DateFin > DateTime.Now || p.DateFin == null || p.DateFin == DateTime.Now)).ToList();
+                    personne.Emplois = personne.Emplois.Where(p => p.DateDebut < DateTime.Now && (p.DateFin > DateTime.Now || p.DateFin == null || p.DateFin == DateTime.Now)).ToList();
                 }
 
                 return personnes.Include(p => p.Emplois).OrderBy(p => p.Nom).ThenBy(p => p.Prenom);
@@ -154,11 +155,11 @@ namespace TestTechnique.Controllers
 
             try
             {
-                foreach (var personne in context.Personnes)
+                foreach (var personne in context.Personnes.Include(p => p.Emplois))
                 {
                     foreach (var emploi in personne.Emplois)
                     {
-                        if (emploi.Poste == entreprise)
+                        if (emploi.Entreprise == entreprise)
                         {
                             personnes.Add(personne);
                         }
@@ -180,7 +181,7 @@ namespace TestTechnique.Controllers
 
             try
             {
-                var personne = context.Personnes.Where(p => p.PersonneID == personneID).FirstOrDefault();
+                var personne = context.Personnes.Include(p => p.Emplois).Where(p => p.PersonneID == personneID).FirstOrDefault();
                 if (personne != null)
                 {
                     foreach (var emploi in personne.Emplois)
