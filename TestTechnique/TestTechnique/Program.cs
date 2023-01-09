@@ -2,7 +2,11 @@ using Microsoft.EntityFrameworkCore;
 using TestTechnique.Context;
 
 var builder = WebApplication.CreateBuilder(args);
-
+builder.Host.ConfigureLogging(logging =>
+{
+    logging.ClearProviders();
+    logging.AddConsole();
+});
 // Add services to the container.
 
 

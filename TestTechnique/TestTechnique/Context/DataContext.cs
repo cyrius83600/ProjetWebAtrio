@@ -1,6 +1,8 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using System.Data.Common;
+using System.Reflection.Emit;
 using TestTechnique.Entities;
+using static Microsoft.EntityFrameworkCore.DbLoggerCategory.Database;
 
 namespace TestTechnique.Context
 {
@@ -16,5 +18,6 @@ namespace TestTechnique.Context
         public DataContext(DbContextOptions<DataContext> options) : base(options)
         {
         }
+
     }
 }
