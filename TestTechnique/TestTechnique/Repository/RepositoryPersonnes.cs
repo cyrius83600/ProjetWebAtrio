@@ -4,7 +4,6 @@ namespace TestTechnique.Repository
 {
     public class RepositoryPersonnes : IRepositoryPersonnes
     {
-        private IList<Personne> personnesListe { get; set; } = new List<Personne>();
         public List<Personne> GetAllPersonne(List<Personne> personnes)
         {
 
