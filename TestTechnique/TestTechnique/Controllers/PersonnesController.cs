@@ -2,6 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using TestTechnique.Context;
 using TestTechnique.Entities;
+using TestTechnique.Repository;
 
 namespace TestTechnique.Controllers
 {
@@ -11,8 +12,9 @@ namespace TestTechnique.Controllers
     {
         public DataContext context { get; set; }
         private readonly ILogger _logger;
+        private IRepositoryPersonnes repositoryPersonnes;
 
-        public PersonnesController(DataContext context)
+        public PersonnesController(DataContext contexte, IRepositoryPersonnes repositoryPersonnes)
         {
             this.context = context;
             if(context.Personnes.Count() == 0)
@@ -73,23 +75,12 @@ namespace TestTechnique.Controllers
         {
             try
             {
-                //Valide en fonction de l'age (150 ans)
-                if (personne.IsValide())
-                {
-                    context.Personnes.Add(personne);
-                    context.SaveChanges();
-                }
-                else
-                {
-                    throw new Exception("La personne a plus de 150 ans");
-                }
+                repositoryPersonnes.SauvegarderPersonne(personne, context.Personnes.ToList());
+                context.SaveChanges();
             }
             catch(Exception ex)
             {
-                if (ex.Message == "La personne a plus de 150 ans")
-                    _logger.LogError("La personne a plus de 150 ans");
-                else
-                    _logger.LogError($"Erreur de l'ajout de la personne {personne.Nom}");
+                _logger.LogError($"Erreur de l'ajout de la personne {personne.Nom}");
             }
         }
 
@@ -101,14 +92,10 @@ namespace TestTechnique.Controllers
                 var emploi = context.Emplois.Where(p => p.EmploiId == emploiID).FirstOrDefault();
                 if (emploi != null)
                 {
-                    if (!(emploi.DateDebut == null || emploi.DateDebut == new DateTime()))
+                    if (emploi.DateDebut != null && emploi.DateDebut != new DateTime())
                     {
-                        var personneBase = context.Personnes.Where(p => p.PersonneID == personneID).FirstOrDefault();
-                        if (personneBase != null)
-                        {
-                            personneBase.Emplois.Add(emploi);
-                        }
-
+                        var personne = context.Personnes.Where(p => p.PersonneID == personneID).FirstOrDefault();
+                        repositoryPersonnes.UpdatePersonne(personne, emploi);
                         context.SaveChanges();
                     }
                     else
@@ -126,25 +113,17 @@ namespace TestTechnique.Controllers
         [HttpGet("GetAllPersonnes")]
         public async Task<IEnumerable<Personne>> GetPersonnesEnregistrees()
         {
-            var personnes = context.Personnes;
-
+            var personnes = new List<Personne>();
             try
             {
-                foreach (var personne in personnes)
-                {
-                    personne.Age = personne.GetAge();
-                    //Emplois actuels si l'emploi commence avant maintenant et si la date de fin n'est pas précisée
-                    //ou si elle est postérieur à maintenant
-                    personne.Emplois = personne.Emplois.Where(p => p.DateDebut < DateTime.Now && (p.DateFin > DateTime.Now || p.DateFin == null || p.DateFin == DateTime.Now)).ToList();
-                }
-
-                return personnes.Include(p => p.Emplois).OrderBy(p => p.Nom).ThenBy(p => p.Prenom);
+                personnes = repositoryPersonnes.GetAllPersonne(context.Personnes.Include(p => p.Emplois).ToList());
             }
             catch(Exception ex)
             {
                 _logger.LogError("Erreur dans la récupération des personnes");
-                return personnes;
             }
+
+            return personnes;
 
         }
 
@@ -155,16 +134,7 @@ namespace TestTechnique.Controllers
 
             try
             {
-                foreach (var personne in context.Personnes.Include(p => p.Emplois))
-                {
-                    foreach (var emploi in personne.Emplois)
-                    {
-                        if (emploi.Entreprise == entreprise)
-                        {
-                            personnes.Add(personne);
-                        }
-                    }
-                }
+                personnes = repositoryPersonnes.GetPersonesPerEntreprises(entreprise, context.Personnes.Include(p => p.Emplois).ToList());
             }
             catch(Exception ex)
             {
@@ -184,13 +154,7 @@ namespace TestTechnique.Controllers
                 var personne = context.Personnes.Include(p => p.Emplois).Where(p => p.PersonneID == personneID).FirstOrDefault();
                 if (personne != null)
                 {
-                    foreach (var emploi in personne.Emplois)
-                    {
-                        if (emploi.DateDebut >= dateDebut && emploi.DateFin <= dateFin)
-                        {
-                            emplois.Add(emploi);
-                        }
-                    }
+                    emplois = repositoryPersonnes.GetEmploisPerPersonne(personne, dateDebut, dateFin);
                 }
             }
             catch(Exception ex)
