@@ -1,16 +1,26 @@
-﻿using TestTechnique.Entities;
+﻿using Microsoft.EntityFrameworkCore;
+using TestTechnique.Context;
+using TestTechnique.Entities;
 
 namespace TestTechnique.Repository
 {
     public class RepositoryPersonnes : IRepositoryPersonnes
     {
-        public List<Personne> GetAllPersonne(List<Personne> personnes)
+        DataContext dataContext = null;
+
+        public RepositoryPersonnes(DataContext dataContext)
         {
+            this.dataContext = dataContext;
+        }
+
+        public List<Personne> GetAllPersonne()
+        {
+            var personnes = dataContext.Personnes.Include(p => p.personneEmplois).ToList();
 
             foreach (var personne in personnes)
             {
                 personne.Age = personne.GetAge();
-                personne.Emplois = personne.Emplois.Where(p => p.DateFin > DateTime.Now || p.DateFin == new DateTime()).ToList();
+                personne.personneEmplois = personne.personneEmplois.Where(p => p.dateFin > DateTime.Now).ToList();
             }
 
             return personnes.OrderBy(p => p.Nom).ThenBy(p => p.Prenom).ToList();
@@ -18,42 +28,34 @@ namespace TestTechnique.Repository
 
         public List<Emploi> GetEmploisPerPersonne(Personne personne, DateTime dateDebut, DateTime dateFin)
         {
-            var emplois = new List<Emploi>();
-            foreach (var emploi in personne.Emplois)
-            {
-                if (emploi.DateDebut >= dateDebut && emploi.DateFin <= dateFin)
-                {
-                    emplois.Add(emploi);
-                }
-            }
-            return emplois;
+            return personne.personneEmplois.Where(p => p.dateDebut >= dateDebut && p.dateFin <= dateFin).Select(p => p.Emploi).ToList();
         }
 
-        public List<Personne> GetPersonesPerEntreprises(string entreprise, List<Personne> personnes)
+        public List<Personne> GetPersonesPerEntreprises(string entreprise)
         {
-            var personnesEntreprise = new List<Personne>();
+            var personnesResultat = new List<Personne>();
+            var emplois = dataContext.Emplois.Where(p => p.Entreprise == entreprise).ToList();
+            var personnesEmplois = dataContext.PersonneEmploi.ToList();
+            var personnes = dataContext.Personnes.ToList();
 
-            foreach (var personne in personnes)
-            {
-                foreach (var emploi in personne.Emplois)
-                {
-                    if (emploi.Entreprise == entreprise)
-                    {
-                        personnesEntreprise.Add(personne);
-                    }
-                }
-            }
+            var pesonnesResultat = (from emploi in emplois
+                        join personneEmploi in personnesEmplois 
+                        on emploi.EmploiID equals personneEmploi.EmploiID
+                        join personne in personnes
+                        on personneEmploi.PersonneID equals personne.PersonneId
+                        select personne).ToList();
 
-            return personnesEntreprise;
+            return personnesResultat;
         }
 
-        public void SauvegarderPersonne(Personne personne, List<Personne> personnes)
+        public void SauvegarderPersonne(Personne personne)
         {
+            
             //Valide en fonction de l'age (150 ans)
             if (personne.IsValide())
             {
-                personnes.ToList().Add(personne);
-                
+                dataContext.Personnes.Add(personne);
+                dataContext.SaveChanges();
             }
             else
             {
@@ -61,16 +63,29 @@ namespace TestTechnique.Repository
             }
         }
 
-        public void UpdatePersonne(Personne personne, Emploi emploi)
+        public void UpdatePersonne(Personne personne, Emploi emploi/*, DateTime debut, DateTime fin*/)
         {
-            if (emploi.DateDebut != null && emploi.DateDebut != new DateTime())
+            var personneContext = dataContext.Personnes.Where(p => p.Nom == personne.Nom && p.Prenom == personne.Prenom && p.DateNaissance == personne.DateNaissance).FirstOrDefault();
+            var emploiContext = dataContext.Emplois.Where(p => p.Entreprise == emploi.Entreprise).FirstOrDefault();
+
+            if(personneContext == null)
             {
-                    personne.Emplois.Add(emploi);
+                dataContext.Personnes.Add(personneContext);
             }
-            else
+            if(emploiContext == null)
             {
-                throw new Exception("La date de début de l'emploi n'est pas correcte");
+                dataContext.Emplois.Add(emploiContext);
             }
+
+            var personneEmploi = new PersonneEmploi()
+            {
+                Emploi = emploiContext
+                //dateDebut = debut,
+                //dateFin = fin
+            };
+            personneContext.personneEmplois.Add(personneEmploi);
+
+            dataContext.SaveChanges();
         }
     }
 }

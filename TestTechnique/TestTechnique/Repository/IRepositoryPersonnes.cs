@@ -1,13 +1,14 @@
-﻿using TestTechnique.Entities;
+﻿using Microsoft.EntityFrameworkCore;
+using TestTechnique.Entities;
 
 namespace TestTechnique.Repository
 {
     public interface IRepositoryPersonnes
     {
-        public void SauvegarderPersonne(Personne personne, List<Personne> personnes);
-        public void UpdatePersonne(Personne personne, Emploi emploi);
-        public List<Personne> GetAllPersonne(List<Personne> personnes);
-        public List<Personne> GetPersonesPerEntreprises(string entreprise, List<Personne> personnes);
+        public void SauvegarderPersonne(Personne personne);
+        public void UpdatePersonne(Personne personne, Emploi emploi/*, DateTime debut, DateTime fin*/);
+        public List<Personne> GetAllPersonne();
+        public List<Personne> GetPersonesPerEntreprises(string entreprise);
         public List<Emploi> GetEmploisPerPersonne(Personne personne, DateTime dateDebut, DateTime dateFin);
     }
 }

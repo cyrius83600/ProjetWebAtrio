@@ -7,11 +7,11 @@ namespace TestTechnique.Entities
     {
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-        public int EmploiId { get; set; }
+        public int EmploiID { get; set; }
         public string Entreprise { get; set; }
         public string Poste { get; set; }
-        public DateTime DateDebut { get; set; }
-        public DateTime DateFin { get; set; }
+        public List<PersonneEmploi> personneEmplois { get; set; }
+        public int PersonneEmploiID { get; set; }
 
     }
 }

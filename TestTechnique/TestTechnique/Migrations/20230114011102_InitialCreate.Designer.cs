@@ -12,7 +12,7 @@ using TestTechnique.Context;
 namespace TestTechnique.Migrations
 {
     [DbContext(typeof(DataContext))]
-    [Migration("20230109130342_InitialCreate")]
+    [Migration("20230114011102_InitialCreate")]
     partial class InitialCreate
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -26,46 +26,35 @@ namespace TestTechnique.Migrations
 
             modelBuilder.Entity("TestTechnique.Entities.Emploi", b =>
                 {
-                    b.Property<int>("EmploiId")
+                    b.Property<int>("EmploiID")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("EmploiId"), 1L, 1);
-
-                    b.Property<DateTime>("DateDebut")
-                        .HasColumnType("datetime2");
-
-                    b.Property<DateTime>("DateFin")
-                        .HasColumnType("datetime2");
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("EmploiID"), 1L, 1);
 
                     b.Property<string>("Entreprise")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int?>("PersonneID")
+                    b.Property<int>("PersonneEmploiID")
                         .HasColumnType("int");
 
                     b.Property<string>("Poste")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.HasKey("EmploiId");
-
-                    b.HasIndex("PersonneID");
+                    b.HasKey("EmploiID");
 
                     b.ToTable("Emplois");
                 });
 
             modelBuilder.Entity("TestTechnique.Entities.Personne", b =>
                 {
-                    b.Property<int>("PersonneID")
+                    b.Property<int>("PersonneId")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("PersonneID"), 1L, 1);
-
-                    b.Property<int>("Age")
-                        .HasColumnType("int");
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("PersonneId"), 1L, 1);
 
                     b.Property<DateTime>("DateNaissance")
                         .HasColumnType("datetime2");
@@ -78,21 +67,61 @@ namespace TestTechnique.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.HasKey("PersonneID");
+                    b.HasKey("PersonneId");
 
                     b.ToTable("Personnes");
                 });
 
+            modelBuilder.Entity("TestTechnique.Entities.PersonneEmploi", b =>
+                {
+                    b.Property<int>("PersonneEmploiID")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("PersonneEmploiID"), 1L, 1);
+
+                    b.Property<int>("EmploiID")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("PersonneId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("dateDebut")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("dateFin")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("PersonneEmploiID");
+
+                    b.HasIndex("EmploiID");
+
+                    b.HasIndex("PersonneId");
+
+                    b.ToTable("PersonneEmploi");
+                });
+
+            modelBuilder.Entity("TestTechnique.Entities.PersonneEmploi", b =>
+                {
+                    b.HasOne("TestTechnique.Entities.Emploi", null)
+                        .WithMany("personneEmplois")
+                        .HasForeignKey("EmploiID")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("TestTechnique.Entities.Personne", null)
+                        .WithMany("personneEmplois")
+                        .HasForeignKey("PersonneId");
+                });
+
             modelBuilder.Entity("TestTechnique.Entities.Emploi", b =>
                 {
-                    b.HasOne("TestTechnique.Entities.Personne", null)
-                        .WithMany("Emplois")
-                        .HasForeignKey("PersonneID");
+                    b.Navigation("personneEmplois");
                 });
 
             modelBuilder.Entity("TestTechnique.Entities.Personne", b =>
                 {
-                    b.Navigation("Emplois");
+                    b.Navigation("personneEmplois");
                 });
 #pragma warning restore 612, 618
         }

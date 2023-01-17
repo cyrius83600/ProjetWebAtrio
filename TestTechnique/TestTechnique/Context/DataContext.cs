@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 using System.Data.Common;
 using System.Reflection.Emit;
 using TestTechnique.Entities;
@@ -10,6 +11,7 @@ namespace TestTechnique.Context
     {
         public DbSet<Emploi> Emplois { get; set; }
         public DbSet<Personne> Personnes { get; set; }
+        public DbSet<PersonneEmploi> PersonneEmploi { get; set; }
 
         public DataContext()
         {
@@ -17,6 +19,11 @@ namespace TestTechnique.Context
 
         public DataContext(DbContextOptions<DataContext> options) : base(options)
         {
+        }
+
+        protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+        {
+            optionsBuilder.UseSqlServer("Server=WEBATRIOCONCAS;Database=TestTechnique;Trusted_Connection=True;");
         }
 
     }
