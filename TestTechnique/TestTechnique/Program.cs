@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using System.Text.Json.Serialization;
 using TestTechnique.Context;
 using TestTechnique.Repository;
 
@@ -13,13 +14,15 @@ builder.Host.ConfigureLogging(logging =>
 
 
 
-builder.Services.AddControllers();
+builder.Services.AddControllers().AddJsonOptions(x =>
+                x.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles);
 
 builder.Services.AddDbContext<DataContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("TestTechnique"))
 );
 
 builder.Services.AddTransient<IRepositoryPersonnes, RepositoryPersonnes>();
+    builder.Services.AddTransient<DataContext>();
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();

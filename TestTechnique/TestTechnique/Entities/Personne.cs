@@ -11,22 +11,14 @@ namespace TestTechnique.Entities
         public string Nom { get; set; }
         public string Prenom { get; set; }
         public DateTime DateNaissance { get; set; }
-        public List<PersonneEmploi> personneEmplois { get; set; } = new List<PersonneEmploi>();
-
-        [NotMapped]
-        public int Age { get; set; }
-
+        public List<PersonneEmploi> PersonnesEmplois { get; set; } = new List<PersonneEmploi>();
         public int GetAge()
         {
-            return (int)((DateTime.Now - DateNaissance).TotalDays / 365);
+            return (int)((DateTime.Now - this.DateNaissance).TotalDays / 365);
         }
         public bool IsValide()
         {
-            if(GetAge() >= 150 )
-            {
-                return false;
-            }
-            return true;
+            return GetAge() >= 150;
         }
     }
 }

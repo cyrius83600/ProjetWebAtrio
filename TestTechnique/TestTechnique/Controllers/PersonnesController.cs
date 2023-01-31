@@ -84,29 +84,28 @@ namespace TestTechnique.Controllers
         }
 
         [HttpPut]
-        public async Task UpdatePersonne(PersonneEmploiModel personneEmploi)
+        public async Task UpdatePersonne(PostEmploiDto personneEmploi)
         {
 
-            repositoryPersonnes.UpdatePersonne(personneEmploi.Personne, personneEmploi.Emploi/*, personneEmploi.dateDebut, personneEmploi.dateFin*/);
+            repositoryPersonnes.UpdatePersonne(personneEmploi.PersonneID, personneEmploi.EmploiID, personneEmploi.dateDebut, personneEmploi.dateFin);
         }
 
         [HttpGet("GetAllPersonnes")]
-        public async Task<IEnumerable<Personne>> GetPersonnesEnregistrees()
+        public IEnumerable<PersonneDto> GetPersonnesEnregistrees()
         {
             return repositoryPersonnes.GetAllPersonne();
         }
 
         [HttpGet("GetPersonnesEntreprise/{entreprise}")]
-        public async Task<IEnumerable<Personne>> GetPersonnesEntreprises(string entreprise)
+        public async Task<List<IEnumerable<PersonneEmploiDto>>> GetPersonnesEntreprises(string entreprise)
         {
-            var test = repositoryPersonnes.GetPersonesPerEntreprises(entreprise);
             return repositoryPersonnes.GetPersonesPerEntreprises(entreprise);
         }
 
         [HttpGet("EmploisPersonne")]
-        public async Task<IEnumerable<Emploi>> GetEmploisPersonnes(Personne personne, DateTime dateDebut, DateTime dateFin)
+        public PersonneDto GetEmploisPersonnes(int personneID, DateTime dateDebut, DateTime dateFin)
         {
-            return repositoryPersonnes.GetEmploisPerPersonne(personne, dateDebut, dateFin);
+            return repositoryPersonnes.GetEmploisPerPersonne(personneID, dateDebut, dateFin);
         }
     }
 }
