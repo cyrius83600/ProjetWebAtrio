@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System;
+using System.Linq.Expressions;
 using TestTechnique.Context;
 using TestTechnique.Entities;
 
@@ -15,94 +16,78 @@ namespace TestTechnique.Repository
             this.dataContext = dataContext;
         }
 
-        public List<PersonneDto> GetAllPersonne()
+        public List<PersonneEmploiDto> GetAllPersonne()
         {
-            return dataContext.Personnes.Include(p => p.PersonnesEmplois).OrderBy(p => p.Nom).ThenBy(p => p.Prenom).Select(p => new PersonneDto()
+            var personnes = dataContext.Personnes.Include(p => p.PersonnesEmplois).OrderBy(p => p.Nom).ThenBy(p => p.Prenom).ToList();
+            var personnesDto = new List<PersonneEmploiDto>();
+            foreach (var personne in personnes)
             {
-               Age = p.GetAge(),
-               Nom = p.Nom,
-               DateNaissance = p.DateNaissance,
-               Prenom = p.Prenom,
-               Emplois = p.PersonnesEmplois.Select(p => new EmploiDto()
-               {
-                   dateDebut = p.dateDebut,
-                   dateFin = p.dateFin,
-                   Entreprise = p.Entreprise,
-                   Poste = p.Poste,
-                   ID = p.EmploiID
-                   
-               }).ToList()
-            }).ToList();
+                personne.PersonnesEmplois = personne.PersonnesEmplois.Where(p => p.dateFin == null || p.dateFin == new DateTime() || p.dateFin >= DateTime.Now).ToList();
+                var personneDto = GetPersonneEmploi(personne);
+                personneDto.Age = personne.GetAge();
+                personnesDto.Add(personneDto);
 
-            //foreach(var personne in personnes)
-            //{
-            //    personne.Age = personne.GetAge();
-            //    personne.PersonnesEmplois = personne.PersonnesEmplois.Where(p => p.dateFin == null || p.dateFin >= DateTime.Now).ToList();
-            //}
-
-            //var test = dataContext.Personnes.Include(p => p.PersonnesEmplois).Where(p => p.PersonneId == 1).ToList();
-
-            //return new List<Personne>();
+            }
+            return personnesDto;
         }
 
-        public PersonneDto GetEmploisPerPersonne(int personneID, DateTime dateDebut, DateTime dateFin)
+        public PersonneEmploiDto GetEmploisPerPersonne(int personneID, DateTime dateDebut, DateTime dateFin)
         {
-            var personne = dataContext.Personnes.Include(p => p.PersonnesEmplois).Where(p => p.PersonneId == personneID).FirstOrDefault();
-            return new PersonneDto()
+            var personne = dataContext.Personnes.Include(p => p.PersonnesEmplois.Where(p => p.dateDebut >= dateDebut && p.dateFin <= dateFin)).FirstOrDefault(p => p.PersonneId == personneID);
+            PersonneEmploiDto personneDto = GetPersonneEmploi(personne); //new PersonneEmploiDto();
+            return personneDto;
+        }
+
+        private PersonneEmploiDto GetPersonneEmploi(Personne? personne)
+        {
+            var personneDto = new PersonneEmploiDto();
+            personneDto.Personne = new PersonneDto()
             {
-                Age = personne.GetAge(),
-                Nom = personne.Nom,
                 DateNaissance = personne.DateNaissance,
+                Nom = personne.Nom,
                 Prenom = personne.Prenom,
-                Emplois = personne.PersonnesEmplois.Where(p => p.dateDebut >= dateDebut && p.dateFin <= dateFin).Select(u => new EmploiDto()
-                {
-                    dateDebut = u.dateDebut,
-                    dateFin = u.dateFin,
-                    Entreprise = u.Entreprise,
-                    Poste = u.Poste,
-                    ID = u.EmploiID
-
-                }).ToList()
+                PersonneID = personne.PersonneId
             };
+            personneDto.Emplois = personne.PersonnesEmplois.Join(dataContext.Emplois,
+                p => p.EmploiID,
+                e => e.EmploiID,
+                (p, e) => new EmploiDto()
+                {
+                    EmploiID = p.EmploiID,
+                    Poste = e.Poste,
+                    Entreprise = e.Entreprise,
+                    dateDebut = p.dateDebut,
+                    dateFin = p.dateFin
+                }).ToList();
+            return personneDto;
         }
-
-
-
-        public List<IEnumerable<PersonneEmploiDto>> GetPersonesPerEntreprises(string entreprise)
+        public List<Emploi> GetPersonesPerEntreprises(string entreprise)
         {
-            //var personnes = new List<Personne>();
-
-
-            return dataContext.Emplois.Include(p => p.Personnes).Select(p => p.Personnes.Select(u => new PersonneEmploiDto()
+            var emplois = dataContext.Emplois.Include(p => p.PersonnesEmplois).ToList();
+            foreach(var emploi in emplois)
             {
-                Personne = new PersonneDto()
-                {
-                    Prenom = u.Prenom,
-                    Nom = u.Nom,
-                    DateNaissance = u.DateNaissance,
-                },
-                Emplois = new EmploiDto()
-                {
-                    Poste = u.Poste,
-                    Entreprise = u.Entreprise,
-                    dateDebut = u.dateDebut,
-                    dateFin = u.dateFin,
-                    ID = u.EmploiID
-                }
-            })).ToList();
+                emploi.PersonnesEmplois = emploi.PersonnesEmplois
+                    .Join(dataContext.Personnes,
+                          p => p.PersonneId,
+                          e => e.PersonneId,
+                          (p, e) => new PersonneEmploi()
+                          {
+                              dateDebut = p.dateDebut,
+                              dateFin = p.dateFin,
 
-            //foreach (var personne in emplois)
-            //{
-            //    personnes.Add(new Personne()
-            //    {
-            //        DateNaissance = personne.DateNaissance,
-            //        Nom = personne.Nom,
-            //        Prenom = personne.Prenom
-            //    });
-            //}
+                              personne = new Personne()
+                              {
+                                  Nom = e.Nom,
+                                  Prenom = e.Prenom,
+                                  DateNaissance = e.DateNaissance,
+                                  PersonneId = e.PersonneId
+                              }
+                          }
+                          ).ToList();
+            }
 
-            //return personnes;
 
+            return emplois.ToList();
         }
 
         public void SauvegarderPersonne(Personne personne)
@@ -127,15 +112,10 @@ namespace TestTechnique.Repository
 
             var personneEmploi = new PersonneEmploi()
             {
-                Nom = personne.Nom,
-                Prenom = personne.Prenom,
-                DateNaissance = personne.DateNaissance,
-                Entreprise = emploi.Entreprise,
-                Poste = emploi.Poste,
                 dateDebut = debut,
                 dateFin = fin,
-                EmploiID = emploiID,
-                PersonneId = personneID
+                EmploiID = emploi.EmploiID,
+                PersonneId = personne.PersonneId
             };
             dataContext.PersonneEmploi.Add(personneEmploi);
 

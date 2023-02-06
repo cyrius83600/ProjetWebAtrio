@@ -1,7 +1,11 @@
 ﻿namespace TestTechnique.Entities
 {
-    public class EmploiDto
+    public class Jointure
     {
+        public int PersonneId { get; set; }
+        public string Nom { get; set; }
+        public string Prenom { get; set; }
+        public DateTime DateNaissance { get; set; }
         public int EmploiID { get; set; }
         public string Poste { get; set; }
         public string Entreprise { get; set; }

@@ -91,19 +91,19 @@ namespace TestTechnique.Controllers
         }
 
         [HttpGet("GetAllPersonnes")]
-        public IEnumerable<PersonneDto> GetPersonnesEnregistrees()
+        public IEnumerable<PersonneEmploiDto> GetPersonnesEnregistrees()
         {
             return repositoryPersonnes.GetAllPersonne();
         }
 
         [HttpGet("GetPersonnesEntreprise/{entreprise}")]
-        public async Task<List<IEnumerable<PersonneEmploiDto>>> GetPersonnesEntreprises(string entreprise)
+        public async Task<List<Emploi>> GetPersonnesEntreprises(string entreprise)
         {
             return repositoryPersonnes.GetPersonesPerEntreprises(entreprise);
         }
 
         [HttpGet("EmploisPersonne")]
-        public PersonneDto GetEmploisPersonnes(int personneID, DateTime dateDebut, DateTime dateFin)
+        public PersonneEmploiDto GetEmploisPersonnes(int personneID, DateTime dateDebut, DateTime dateFin)
         {
             return repositoryPersonnes.GetEmploisPerPersonne(personneID, dateDebut, dateFin);
         }

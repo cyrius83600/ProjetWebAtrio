@@ -10,7 +10,9 @@ namespace TestTechnique.Entities
         public int EmploiID { get; set; }
         public string Entreprise { get; set; }
         public string Poste { get; set; }
-        public List<PersonneEmploi> Personnes { get; set; } = new List<PersonneEmploi>();
+        public List<PersonneEmploi> PersonnesEmplois { get; set; } = new List<PersonneEmploi>();
+        [NotMapped]
+        public List<PersonneDto> Personnes { get; set; } = new List<PersonneDto>();
 
     }
 }

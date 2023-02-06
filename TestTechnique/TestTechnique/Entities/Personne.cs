@@ -12,6 +12,10 @@ namespace TestTechnique.Entities
         public string Prenom { get; set; }
         public DateTime DateNaissance { get; set; }
         public List<PersonneEmploi> PersonnesEmplois { get; set; } = new List<PersonneEmploi>();
+        //[NotMapped]
+        //public List<Emploi> Emploi { get; set; } = new List<Emploi>();
+        [NotMapped]
+        public int Age { get; set; }
         public int GetAge()
         {
             return (int)((DateTime.Now - this.DateNaissance).TotalDays / 365);

@@ -3,7 +3,7 @@
     public class PersonneEmploiDto
     {
         public PersonneDto Personne { get; set; }
-        public EmploiDto Emplois { get; set; } 
+        public List<EmploiDto> Emplois { get; set; } 
         
         public int Age { get; set; }
         public int GetAge()

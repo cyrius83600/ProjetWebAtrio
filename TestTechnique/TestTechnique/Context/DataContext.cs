@@ -23,13 +23,19 @@ namespace TestTechnique.Context
         {
         }
 
+        
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
+            //modelBuilder.Entity<PersonneEmploi>().HasKey(p => new { p.PersonneId, p.EmploiID });
+            //modelBuilder.Entity<PersonneEmploi>().HasOne(p => p.personne).WithMany(u => u.PersonnesEmplois).HasForeignKey(p => p.PersonneId);
+            //modelBuilder.Entity<PersonneEmploi>().HasOne(p => p.emploi).WithMany(u => u.Personnes).HasForeignKey(p => p.EmploiID);
+
+
             modelBuilder.Entity<Personne>()
                 .HasMany(p => p.PersonnesEmplois);
-            
+
             modelBuilder.Entity<Emploi>()
-                .HasMany(p => p.Personnes);
+                .HasMany(p => p.PersonnesEmplois);
         }
 
     }
